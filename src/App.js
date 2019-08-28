@@ -5,44 +5,41 @@ import BeyContainer from "./BeyContainer"
 import Favorites from "./Favorites"
 
 class App extends React.Component {
-  state = { allBeys: [], favBeys: [] }
+  state = { allBeys: [] }
 
   componentDidMount() {
     fetch("http://localhost:4000/beys")
       .then(resp => resp.json())
       .then(json => {
-        this.setState({ allBeys: json, favBeys: json })
+        this.setState({ allBeys: json })
       })
   }
 
   handleClick = bey => {
-    fetch(`http://localhost:4000/beys/${bey.props.info.id}`, {
+    fetch(`http://localhost:4000/beys/${bey.id}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        favorite: !bey.props.info.favorite
+        favorite: !bey.favorite
       })
     })
       .then(resp => resp.json())
       .then(json => {
-        console.log(json)
+        const allFavs = this.state.allBeys.map(beyInstance =>
+          beyInstance.id == json.id ? json : beyInstance
+        )
+        this.setState({ allBeys: allFavs })
       })
-
-    let allBeys = this.state.favBeys
-    let newBeys = allBeys.filter(beyInstance => beyInstance !== bey.props.info)
-    bey.props.info.favorite = !bey.props.info.favorite
-    newBeys = [bey.props.info, ...newBeys]
-    this.setState({ favBeys: newBeys })
   }
 
   render() {
-    // console.log("APP", this.state.allBeys)
+    const favs = this.state.allBeys.filter(bey => bey.favorite)
     return (
       <div className="container">
         <BeyContainer allBeys={this.state.allBeys} clicked={this.handleClick} />
-        <Favorites favBeys={this.state.favBeys} clicked={this.handleClick} />
+        <Favorites favBeys={favs} clicked={this.handleClick} />
       </div>
     )
   }
